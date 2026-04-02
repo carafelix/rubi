@@ -3,12 +3,11 @@ package com.kevinsundqvistnorlen.rubi.option;
 import com.kevinsundqvistnorlen.rubi.Utils;
 import com.mojang.serialization.Codec;
 import net.minecraft.client.option.*;
-import net.minecraft.util.TranslatableOption;
-import org.apache.commons.lang3.mutable.MutableInt;
+import net.minecraft.text.Text;
 
 import java.util.Arrays;
 
-public enum RubyRenderMode implements TranslatableOption {
+public enum RubyRenderMode {
     HIDDEN("hidden"),
     ABOVE("above"),
     BELOW("below"),
@@ -18,6 +17,10 @@ public enum RubyRenderMode implements TranslatableOption {
 
     RubyRenderMode(String name) {
         this.translationKey = Option.TRANSLATION_KEY + "." + name;
+    }
+
+    public Text getText() {
+        return Text.translatable(this.translationKey);
     }
 
     public static void accept(GameOptions.Visitor visitor) {
@@ -32,29 +35,24 @@ public enum RubyRenderMode implements TranslatableOption {
         return RubyRenderMode.values()[id];
     }
 
-    @Override
-    public int getId() {
-        return this.ordinal();
-    }
-
-    @Override
-    public String getTranslationKey() {
-        return this.translationKey;
-    }
-
     private static final class Option {
         static final String TRANSLATION_KEY = "options.rubi.renderMode";
+
         static final SimpleOption<RubyRenderMode> INSTANCE = new SimpleOption<>(
             TRANSLATION_KEY,
             SimpleOption.emptyTooltip(),
-            SimpleOption.enumValueText(),
+            (optionText, value) -> value.getText(), // ✅ now valid
             new SimpleOption.PotentialValuesBasedCallbacks<>(
                 Arrays.asList(RubyRenderMode.values()),
-                Codec.INT.xmap(RubyRenderMode::byId, RubyRenderMode::getId)
+                Codec.INT.xmap(RubyRenderMode::byId, RubyRenderMode::ordinal)
             ),
             RubyRenderMode.ABOVE,
             (value) -> {
-                Utils.LOGGER.debug("Ruby display mode changed to {} ({})", value.toString(), value.ordinal());
+                Utils.LOGGER.debug(
+                    "Ruby display mode changed to {} ({})",
+                    value.toString(),
+                    value.ordinal()
+                );
             }
         );
     }
